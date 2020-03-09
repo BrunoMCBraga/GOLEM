@@ -3,18 +3,18 @@ package main
 import (
 	"fmt"
 
-	"github.com/golem/commandlineparsers"
+	"github.com/golem/commandlinegenerators"
 	"github.com/golem/commandlineprocessors"
 	"github.com/golem/globalstringsproviders"
 )
 
 func main() {
-	commandlineparsers.PrepareCommandLineProcessing()
+	commandlinegenerators.PrepareCommandLineProcessing()
 
 	fmt.Println(globalstringsproviders.GetMenuPictureString())
-	commandlineparsers.ParseCommandLine()
+	commandlinegenerators.ParseCommandLine()
 
-	parameters := commandlineparsers.GetParametersDict()
+	parameters := commandlinegenerators.GetParametersDict()
 	processCommandLineProcessorError := commandlineprocessors.ProcessCommandLine(parameters)
 	if processCommandLineProcessorError != nil {
 		fmt.Println(fmt.Sprintf("%s: %s", "Golem->main->commandlineprocessors.ProcessCommandLine:", processCommandLineProcessorError.Error()))

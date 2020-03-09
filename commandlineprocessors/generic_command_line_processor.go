@@ -11,22 +11,16 @@ import (
 )
 
 func updateLocalCache(commandLineMap map[string]interface{}) error {
+	//First we get all the command line parameters so we fail fast if something is missing
 
-	getListOfReservedNetCIDRsResult, getListOfReservedNetCIDRsError := util.GetListOfReservedNetCIDRs()
-	if getListOfReservedNetCIDRsError != nil {
-		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->main->util.GetListOfReservedNetCIDRs:", getListOfReservedNetCIDRsError.Error()))
-	}
+	var useURLsFileAsSource bool
 
 	var dnsServersURLsSourcesInputFileTempString string
 	if dnsServersURLsSourcesInputFile, ok := commandLineMap["dns_servers_url_sources_input_file"].(string); ok && dnsServersURLsSourcesInputFile != "" {
 		dnsServersURLsSourcesInputFileTempString = dnsServersURLsSourcesInputFile
+		useURLsFileAsSource = true
 	} else {
-		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->updateLocalCache: -duf argument missing"))
-	}
-
-	readFileResult, readFileError := ioutil.ReadFile(dnsServersURLsSourcesInputFileTempString)
-	if readFileError != nil {
-		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->updateLocalCache->ioutil.ReadFile:", readFileError.Error()))
+		useURLsFileAsSource = false
 	}
 
 	var cacheInputOutputFileTempString string
@@ -34,11 +28,6 @@ func updateLocalCache(commandLineMap map[string]interface{}) error {
 		cacheInputOutputFileTempString = cacheInputOutputFile
 	} else {
 		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->updateLocalCache: -cf argument missing"))
-	}
-
-	getDNSIPsResult, getDNSIPsError := util.GetDNSIPs(false, cacheInputOutputFileTempString, strings.Split(strings.Trim(string(readFileResult), "\n"), "\n"))
-	if getDNSIPsError != nil {
-		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->updateLocalCache->util.GetDNSIPs:", getDNSIPsError.Error()))
 	}
 
 	var numberOfThreadsTempInt int
@@ -49,14 +38,38 @@ func updateLocalCache(commandLineMap map[string]interface{}) error {
 		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->updateLocalCache: -t argument missing"))
 	}
 
-	splitArrayResult := util.SplitSliceIntoSubslices(getDNSIPsResult, numberOfThreadsTempInt)
-
 	var testFQDNTempString string
 	if testFQDN, ok := commandLineMap["test_fqdn"].(string); ok && testFQDN != "" {
 		testFQDNTempString = testFQDN
 	} else {
 		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->updateLocalCache: -th argument missing"))
 	}
+
+	getListOfReservedNetCIDRsResult, getListOfReservedNetCIDRsError := util.GetListOfReservedNetCIDRs()
+	if getListOfReservedNetCIDRsError != nil {
+		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->main->util.GetListOfReservedNetCIDRs:", getListOfReservedNetCIDRsError.Error()))
+	}
+
+	//Now we perform the calls
+
+	var getDNSIPsResult []string
+	var getDNSIPsError error
+	if useURLsFileAsSource {
+		readFileResult, readFileError := ioutil.ReadFile(dnsServersURLsSourcesInputFileTempString)
+		if readFileError != nil {
+			return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->updateLocalCache->ioutil.ReadFile:", readFileError.Error()))
+		}
+
+		getDNSIPsResult, getDNSIPsError = util.GetDNSIPs(false, cacheInputOutputFileTempString, strings.Split(strings.Trim(string(readFileResult), "\n"), "\n"))
+	} else {
+		getDNSIPsResult, getDNSIPsError = util.GetDNSIPs(true, cacheInputOutputFileTempString, []string{})
+	}
+
+	if getDNSIPsError != nil {
+		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->updateLocalCache->util.GetDNSIPs:", getDNSIPsError.Error()))
+	}
+
+	splitArrayResult := util.SplitSliceIntoSubslices(getDNSIPsResult, numberOfThreadsTempInt)
 
 	triageDNSServersAndUpdateLocalCacheResult, triageDNSServersAndUpdateLocalCacheError := engines.TriageDNSServersAndUpdateLocalCacheStub(testFQDNTempString, splitArrayResult, getListOfReservedNetCIDRsResult)
 	if triageDNSServersAndUpdateLocalCacheError != nil {
@@ -74,22 +87,7 @@ func updateLocalCache(commandLineMap map[string]interface{}) error {
 
 func bruteforceDomains(commandLineMap map[string]interface{}) error {
 
-	getListOfReservedNetCIDRsResult, getListOfReservedNetCIDRsError := util.GetListOfReservedNetCIDRs()
-	if getListOfReservedNetCIDRsError != nil {
-		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteforceDomains->util.GetListOfReservedNetCIDRs:", getListOfReservedNetCIDRsError.Error()))
-	}
-
-	var dnsServersURLsSourcesInputFileTempString string
-	if dnsServersURLsSourcesInputFile, ok := commandLineMap["dns_servers_url_sources_input_file"].(string); ok && dnsServersURLsSourcesInputFile != "" {
-		dnsServersURLsSourcesInputFileTempString = dnsServersURLsSourcesInputFile
-	} else {
-		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteforceDomains: -duf argument missing"))
-	}
-
-	readFileResult, readFileError := ioutil.ReadFile(dnsServersURLsSourcesInputFileTempString)
-	if readFileError != nil {
-		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteforceDomains->ioutil.ReadFile:", readFileError.Error()))
-	}
+	//First we get all the command line parameters so we fail fast if something is missing
 
 	var cacheInputOutputFileTempString string
 	if cacheInputOutputFile, ok := commandLineMap["cache_input_output_file"].(string); ok && cacheInputOutputFile != "" {
@@ -98,28 +96,11 @@ func bruteforceDomains(commandLineMap map[string]interface{}) error {
 		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteforceDomains: -cf argument missing"))
 	}
 
-	getDNSIPsResult, getDNSIPsError := util.GetDNSIPs(true, cacheInputOutputFileTempString, strings.Split(strings.Trim(string(readFileResult), "\n"), "\n"))
-	if getDNSIPsError != nil {
-		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteforceDomains->util.GetDNSIPs:", getDNSIPsError.Error()))
-	}
-
 	var baseDomainTempString string
 	if baseDomain, ok := commandLineMap["base_domain"].(string); ok && baseDomain != "" {
 		baseDomainTempString = baseDomain
 	} else {
 		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteforceDomains: -bd argument missing"))
-	}
-
-	var hostsWordlistFileTempString string
-	if hostsWordlistFile, ok := commandLineMap["hosts_wordlist_wile"].(string); ok && hostsWordlistFile != "" {
-		hostsWordlistFileTempString = hostsWordlistFile
-	} else {
-		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteforceDomains: -hw argument missing"))
-	}
-
-	generateListOfFQDNsResult, generateListOfFQDNsError := engines.GenerateSliceOfFQDNs(baseDomainTempString, hostsWordlistFileTempString)
-	if generateListOfFQDNsError != nil {
-		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->engines.GenerateListOfFQDNs:", generateListOfFQDNsError.Error()))
 	}
 
 	var numberOfThreadsTempInt int
@@ -130,11 +111,11 @@ func bruteforceDomains(commandLineMap map[string]interface{}) error {
 		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor: -t argument missing"))
 	}
 
-	splitArrayResult := util.SplitSliceIntoSubslices(generateListOfFQDNsResult, numberOfThreadsTempInt)
-
-	bruteFQDNsStubResult, bruteFQDNsStubError := engines.BruteFQDNsStub(splitArrayResult, getDNSIPsResult, getListOfReservedNetCIDRsResult)
-	if bruteFQDNsStubError != nil {
-		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteDomainsStub->engines.BruteFQDNsStub:", bruteFQDNsStubError.Error()))
+	var hostsWordlistFileTempString string
+	if hostsWordlistFile, ok := commandLineMap["hosts_wordlist_wile"].(string); ok && hostsWordlistFile != "" {
+		hostsWordlistFileTempString = hostsWordlistFile
+	} else {
+		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteforceDomains: -hw argument missing"))
 	}
 
 	var resolvedFQDNsTempString string
@@ -144,30 +125,58 @@ func bruteforceDomains(commandLineMap map[string]interface{}) error {
 		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor: -rf argument missing"))
 	}
 
+	var validationDNSServerTempString string
+	var validDNSOutputFileTempString string
+	var validateFQDNs bool = false
+
+	if validationDNSServer, ok := commandLineMap["validation_dns_server"].(string); ok && validationDNSServer != "" {
+		validationDNSServerTempString = validationDNSServer
+
+		if validDNSOutputFile, ok := commandLineMap["valid_dns_output_file"].(string); ok && validDNSOutputFile != "" {
+			validDNSOutputFileTempString = validDNSOutputFile
+			validateFQDNs = true
+		} else {
+			return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor: -vf argument missing"))
+		}
+	} else {
+		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor: -vs argument missing"))
+	}
+
+	//Now we perform the calls
+	getListOfReservedNetCIDRsResult, getListOfReservedNetCIDRsError := util.GetListOfReservedNetCIDRs()
+	if getListOfReservedNetCIDRsError != nil {
+		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteforceDomains->util.GetListOfReservedNetCIDRs:", getListOfReservedNetCIDRsError.Error()))
+	}
+
+	getDNSIPsResult, getDNSIPsError := util.GetDNSIPs(true, cacheInputOutputFileTempString, []string{})
+	if getDNSIPsError != nil {
+		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteforceDomains->util.GetDNSIPs:", getDNSIPsError.Error()))
+	}
+
+	generateListOfFQDNsResult, generateListOfFQDNsError := engines.GenerateSliceOfFQDNs(baseDomainTempString, hostsWordlistFileTempString)
+	if generateListOfFQDNsError != nil {
+		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->engines.GenerateListOfFQDNs:", generateListOfFQDNsError.Error()))
+	}
+
+	splitArrayResult := util.SplitSliceIntoSubslices(generateListOfFQDNsResult, numberOfThreadsTempInt)
+
+	bruteFQDNsStubResult, bruteFQDNsStubError := engines.BruteFQDNsStub(splitArrayResult, getDNSIPsResult, getListOfReservedNetCIDRsResult)
+	if bruteFQDNsStubError != nil {
+		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->bruteDomainsStub->engines.BruteFQDNsStub:", bruteFQDNsStubError.Error()))
+	}
+
 	writeArrayOfStringsToFileError := util.WriteArrayOfStringsToFile(bruteFQDNsStubResult, resolvedFQDNsTempString)
 	if writeArrayOfStringsToFileError != nil {
 		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->util.WriteArrayOfStringsToFile:", writeArrayOfStringsToFileError.Error()))
 	}
 
-	var validationDNSServerTempString string
-	if validationDNSServer, ok := commandLineMap["validation_dns_server"].(string); ok && validationDNSServer != "" {
-		validationDNSServerTempString = validationDNSServer
-	} else {
-		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor: -vs argument missing"))
-	}
+	if validateFQDNs {
+		checkIfHostnamesResolveResult := engines.CheckIfFQDNsResolve(bruteFQDNsStubResult, validationDNSServerTempString)
 
-	var validDNSOutputFileTempString string
-	if validDNSOutputFile, ok := commandLineMap["valid_dns_output_file"].(string); ok && validDNSOutputFile != "" {
-		validDNSOutputFileTempString = validDNSOutputFile
-	} else {
-		return errors.New(fmt.Sprintf("|%s|", "GOLEM->commandlineprocessors->generic_command_line_processor: -vf argument missing"))
-	}
-
-	checkIfHostnamesResolveResult := engines.CheckIfFQDNsResolve(bruteFQDNsStubResult, validationDNSServerTempString)
-
-	writeArrayOfStringsToFileError = util.WriteArrayOfStringsToFile(checkIfHostnamesResolveResult, validDNSOutputFileTempString)
-	if writeArrayOfStringsToFileError != nil {
-		return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->util.WriteArrayOfStringsToFile:", writeArrayOfStringsToFileError.Error()))
+		writeArrayOfStringsToFileError = util.WriteArrayOfStringsToFile(checkIfHostnamesResolveResult, validDNSOutputFileTempString)
+		if writeArrayOfStringsToFileError != nil {
+			return errors.New(fmt.Sprintf("|%s:%s|", "GOLEM->commandlineprocessors->generic_command_line_processor->util.WriteArrayOfStringsToFile:", writeArrayOfStringsToFileError.Error()))
+		}
 	}
 
 	return nil

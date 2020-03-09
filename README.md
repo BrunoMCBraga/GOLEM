@@ -22,7 +22,7 @@ The command line tool is self-explanatory. However, how it all comes together re
 go run main.go -c u -tf www.google.com -t 30 -cf ./dnsServerCacheFile.txt -duf ./dnsURLs.txt 
 ```
 
--c allows you to choose what action is performed. -u means that the local cache is created (using a file containing URLs for files with DNS IPs separated by newlines) while -b assumes the existance of the cache file (passed with -cf), the hostnames wordlist (passed with -hw) and performs the bruteforce of FQDNs. You still need the -cf in this case since the resulting list of servers will be saved to the file you provide. The cache is created by pulling the DNS IPs, filtering out IPv6, and testing them with a A query for the FQDN you provide with -tf flag.
+-c allows you to choose what action is performed. -u means that the local cache is created using a file containing URLs for files with DNS IPs separated by newlines (-duf) while -b assumes the existance of the cache file (passed with -cf), the hostnames wordlist (passed with -hw) and performs the bruteforce of FQDNs. You still need the -cf in this case since the resulting list of servers will be saved to the file you provide. The cache is created by pulling the DNS IPs, filtering out IPv6, and testing them with a A query for the FQDN you provide with -tf flag. If you don't provide -duf, the file passed using -cf will be read and the DNS servers tested as mentioned above.
 
 Once the cache is built you can run the bruteforce:
 
@@ -55,7 +55,7 @@ In the unfortunate case of a DNS server returning an IP that is not reserved and
 My programming projects tend to follow the same structure: 
 - Engines are the files where you find the low-level interction with the necessary SDKs.
 - The util folder contains classes to write files, process net masks, etc
-- Commandline parsers and processors: classes that generate command line processors (out-of-the-box Go flags), process them and call the appropriate engines. 
+- Commandline generators and processors: classes that generate command line processors (out-of-the-box Go flags), process them and call the appropriate engines. 
 - Global string providers: contain the strings used on command line
 
 # Things to improve
