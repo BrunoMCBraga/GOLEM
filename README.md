@@ -58,3 +58,7 @@ My programming projects tend to follow the same structure:
 
 # Things to improve
 - Support IPv6
+
+# Wordlists
+- Recon-NG (https://github.com/lanmaster53/recon-ng) base list
+- https://github.com/bitquark/dnspop
