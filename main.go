@@ -17,6 +17,6 @@ func main() {
 	parameters := commandlineparsers.GetParametersDict()
 	processCommandLineProcessorError := commandlineprocessors.ProcessCommandLine(parameters)
 	if processCommandLineProcessorError != nil {
-		fmt.Println(fmt.Sprintf("%s: %s", "Golem->main->commandlineprocessors.ProcessCommandLinee:", processCommandLineProcessorError.Error()))
+		fmt.Println(fmt.Sprintf("%s: %s", "Golem->main->commandlineprocessors.ProcessCommandLine:", processCommandLineProcessorError.Error()))
 	}
 }
