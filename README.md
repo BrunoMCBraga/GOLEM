@@ -54,6 +54,7 @@ My programming projects tend to follow the same structure:
 - Engines are the files where you find the low-level interction with the necessary SDKs.
 - The util folder contains classes to write files, process net masks, etc
 - Commandline parsers and processors: classes that generate command line processors (out-of-the-box Go flags), process them and call the appropriate engines. 
+- Global string providers: contain the strings used on command line
 
 # Things to improve
 - Support IPv6
