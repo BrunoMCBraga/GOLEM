@@ -10,7 +10,7 @@ Tools don't seem to handle timeouts properly and assume the domains don't exist 
 
 # Description
 GOLEM is a multi-threaded FQDN bruteforcer with some twists:
-- Spreads requests across multiple DNS servers
+- Spreads requests across multiple DNS servers using recursion
 - Resolution timeouts are solved by choosing another DNS server from the list
 - At the end of the bruteforce, a trusted resolver provided by the user is used to check if the FQDNs 
 
