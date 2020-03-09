@@ -6,7 +6,7 @@
 
 
 # Motivation
-Tools don't seem to handle timeouts properly and assume the domains don't exist if so happens. Also, it seems everyone goes crazy over threads but no one thinks about the poor DNS server they are overloading with a bunch of requests. Why not (as we say in my country) "spreading the evil across the villages"? Also, requesting a recursive resolution hides the original IP of the request and let's you sleep better at night knowing Santa won't punish you next Christmas.
+Tools don't seem to handle timeouts properly and assume the domains don't exist if so happens. On another note, it seems everyone goes crazy over threads and progress bars but no one thinks about the poor DNS server they are overloading with a bunch of requests. Why not (as we say in my country) "spreading the evil across the villages"? Also, requesting a recursive resolution hides the original IP of the request and let's you sleep better at night knowing Santa won't punish you next Christmas.
 
 # Description
 GOLEM is a multi-threaded FQDN bruteforcer with some twists:
