@@ -1,4 +1,4 @@
-package commandlineparsers
+package commandlinegenerators
 
 import (
 	"flag"
@@ -41,7 +41,7 @@ func PrepareCommandLineProcessing() {
 	cacheInputOutputFile = flag.String("cf", "", "Cache file  (used with -c b/u)")
 	validDNSOutputFile = flag.String("vf", "", "Valid resolved FQDNs (used with -c b -ts). This is used in combination with -ts to perform a final resolution of found FQDNs using a trusted server supplied with -ts. The reson for this is because sometimes, some DNS servers return invalid IPs for some FQDNs that actually don't exist")
 
-	dnsServersURLSourcesInputFile = flag.String("duf", "", "Input file containing URLs with lists of available DNS servers (used with -c u)")
+	dnsServersURLSourcesInputFile = flag.String("duf", "", "Input file containing URLs with lists of available DNS servers (used with -c u). If this flag is not provided with -c u, the -cf file will be used instead and updated")
 
 	//other switches
 	validationDNSServer = flag.String("vs", "", "FQDN trusted validation server (used with -c b and -ts)")
