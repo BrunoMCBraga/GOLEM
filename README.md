@@ -64,3 +64,6 @@ My programming projects tend to follow the same structure:
 # Wordlists
 - Recon-NG (https://github.com/lanmaster53/recon-ng) base list
 - https://github.com/bitquark/dnspop
+
+## Found this useful? Help me buy more steroids for the mighty Gopher so that the bruteforces are more effective:
+https://www.paypal.com/donate?hosted_button_id=ATZQDP4AWECPL
